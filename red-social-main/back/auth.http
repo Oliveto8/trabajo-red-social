@@ -1,0 +1,30 @@
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YWY0MGQ5M2FiODliOGM2OGY5ZjQxNTMiLCJlbWFpbCI6ImFuYUBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDM3OTE1NiwiZXhwIjoxNzk0MzgyNzU2fQ.0ETzdmU_YQ2z4-bAPSvSRPHb_wh9Sigr_yA46IeoT1U
+@baseUrl = http://localhost:3100
+
+### Registro
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "ana@example.com",
+  "password": "ClaveSegura123",
+  "nombre": "Ana",
+  "apellido": "Gómez",
+  "username": "ana_gomez",
+  "fechaNacimiento": "1998-08-20",
+  "bio": "¡Hola! Estoy probando el registro de la red social.",
+  "avatar": ""
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "ana@example.com",
+  "password": "ClaveSegura123"
+}
+
+### Copiar access_token arriba
+GET {{baseUrl}}/libros
+Authorization: Bearer {{token}}

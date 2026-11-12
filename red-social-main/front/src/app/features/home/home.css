@@ -1,0 +1,218 @@
+.home-container {
+  background-color: #f4f6f9;
+  min-height: 100vh;
+  font-family: inherit;
+}
+
+/* Navbar */
+.navbar {
+  background: #ffffff;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-brand h1 {
+  color: #3498db;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.btn-logout {
+  padding: 0.5rem 1rem;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-logout:hover {
+  background-color: #c0392b;
+}
+
+/* Layout Principal de 3 columnas */
+.main-layout {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: 1.5rem;
+}
+
+/* Tarjeta Perfil Izquierda */
+.sidebar-left .profile-card,
+.sidebar-right .suggestions-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.avatar-placeholder img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0.75rem;
+}
+
+.profile-card h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.username {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  margin: 0.2rem 0 1rem 0;
+}
+
+.bio {
+  font-size: 0.85rem;
+  color: #34495e;
+  text-align: left;
+}
+
+/* Columna Central (Feed) */
+.create-post-card {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.create-post-card textarea {
+  width: 100%;
+  border: 1px solid #dcdde1;
+  border-radius: 8px;
+  padding: 0.75rem;
+  resize: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.create-post-card textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.post-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.btn-publish {
+  padding: 0.6rem 1.5rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-publish:hover {
+  background-color: #2980b9;
+}
+
+/* Tarjetas de Posts */
+.post-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 1rem;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.post-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-author {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #2c3e50;
+}
+
+.post-time {
+  font-size: 0.75rem;
+  color: #95a5a6;
+}
+
+.post-content {
+  color: #34495e;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.post-footer {
+  display: flex;
+  gap: 1rem;
+  border-top: 1px solid #ecf0f1;
+  padding-top: 0.75rem;
+}
+
+.btn-like, .btn-comment {
+  background: none;
+  border: none;
+  color: #7f8c8d;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.btn-like:hover, .btn-comment:hover {
+  color: #3498db;
+}
+
+/* Sidebar Derecha */
+.suggestions-card h3 {
+  font-size: 1rem;
+  color: #2c3e50;
+  margin-top: 0;
+  text-align: left;
+}
+
+.suggestions-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.suggestions-card li {
+  font-size: 0.9rem;
+  color: #3498db;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f1f2f6;
+}

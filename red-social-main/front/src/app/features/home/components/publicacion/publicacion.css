@@ -1,0 +1,153 @@
+.post-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #eaeaea;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.post-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-author {
+  margin: 0;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.post-time {
+  font-size: 0.85rem;
+  color: #7f8c8d;
+}
+
+.post-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+  font-size: 1.15rem;
+}
+
+.post-content p {
+  margin: 0;
+  color: #34495e;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.post-image-container {
+  margin-top: 1rem;
+}
+
+.post-image-container img {
+  max-width: 100%;
+  border-radius: 8px;
+  max-height: 400px;
+  object-fit: cover;
+  display: block;
+}
+
+.post-footer {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f2f6;
+}
+
+.btn-like, .btn-comment {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #555;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-like:hover, .btn-comment:hover {
+  background: #f8f9fa;
+}
+
+/* Estilos de Comentarios */
+.comments-section {
+  margin-top: 1rem;
+  border-top: 1px solid #f1f2f6;
+  padding-top: 1rem;
+}
+
+.comment-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.comment-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-bubble {
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 8px;
+  flex: 1;
+}
+
+.comment-bubble strong {
+  font-size: 0.85rem;
+  color: #2c3e50;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.comment-bubble p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.btn-submit-comment {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn-submit-comment:hover {
+  background: #2980b9;
+}

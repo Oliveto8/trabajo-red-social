@@ -1,0 +1,61 @@
+<div class="home-container">
+  <div class="main-layout">
+    
+    <!-- Columna Izquierda: Perfil -->
+    <aside class="sidebar-left">
+      <div class="profile-card">
+        <div class="avatar-placeholder">
+          <img [src]="currentUser()?.avatar || 'https://via.placeholder.com/80'" alt="Avatar">
+        </div>
+        <h3>{{ currentUser()?.nombre }} {{ currentUser()?.apellido }}</h3>
+        <p class="username">&#64;{{ currentUser()?.username }}</p>
+        <p class="bio">{{ currentUser()?.bio || 'Sin biografía aún.' }}</p>
+      </div>
+    </aside>
+
+    <!-- Columna Central: Crear Post y Feed -->
+    <main class="feed-main">
+      
+      <!-- Caja para crear publicación con archivo -->
+      <div class="create-post-card">
+        <form [formGroup]="postForm" (ngSubmit)="crearPublicacion()">
+          <input type="text" formControlName="titulo" placeholder="Título de tu publicación" class="post-input-title" />
+          <textarea formControlName="descripcion" placeholder="¿Qué estás pensando hoy?" rows="3"></textarea>
+          
+          <!-- Selector de imagen -->
+          <div class="file-upload-wrapper" style="margin: 10px 0;">
+            <label for="file-upload" class="btn-file-upload" style="cursor: pointer; color: #007bff; font-size: 0.9rem;">
+              📷 <span>{{ selectedFile ? selectedFile.name : 'Adjuntar imagen...' }}</span>
+            </label>
+            <input id="file-upload" type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;" />
+          </div>
+
+          <div class="post-actions">
+            <button type="submit" class="btn-publish" [disabled]="postForm.invalid">Publicar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Mensaje de error o carga -->
+      @if (error()) {
+        <div class="error-banner">{{ error() }}</div>
+      }
+
+      <!-- Lista Dinámica usando el Componente Hijo -->
+      <div class="posts-list">
+        @for (post of posts(); track post._id) {
+          @if (post.titulo || post.descripcion) {
+            <app-publicacion 
+              [post]="post" 
+              (postActualizado)="actualizarPostEnLista($event)">
+            </app-publicacion>
+          }
+        } @empty {
+          <p class="no-posts">No hay publicaciones todavía. ¡Sé el primero en escribir algo!</p>
+        }
+      </div>
+
+    </main>
+
+  </div>
+</div>

@@ -1,0 +1,76 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Crear Cuenta</h2>
+      <p>Completá tus datos para sumarte a la red social</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+      <!-- Nombre y Apellido en paralelo -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nombre">Nombre</label>
+          <input id="nombre" type="text" formControlName="nombre" placeholder="Tu nombre">
+        </div>
+
+        <div class="form-group">
+          <label for="apellido">Apellido</label>
+          <input id="apellido" type="text" formControlName="apellido" placeholder="Tu apellido">
+        </div>
+      </div>
+
+      <!-- Username -->
+      <div class="form-group">
+        <label for="username">Nombre de usuario</label>
+        <input id="username" type="text" formControlName="username" placeholder="ej: agustin_dev">
+      </div>
+      
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input id="email" type="email" formControlName="email" placeholder="tu@email.com">
+      </div>
+
+      <!-- Contraseña -->
+      <div class="form-group">
+        <label for="password">Contraseña (Mínimo 8 caracteres)</label>
+        <input id="password" type="password" formControlName="password" placeholder="******">
+      </div>
+
+      <!-- Fecha de Nacimiento -->
+      <div class="form-group">
+        <label for="fechaNacimiento">Fecha de nacimiento</label>
+        <input id="fechaNacimiento" type="date" formControlName="fechaNacimiento">
+      </div>
+
+      <!-- Biografía -->
+      <div class="form-group">
+        <label for="bio">Biografía</label>
+        <textarea id="bio" formControlName="bio" rows="3" placeholder="Contanos un poco sobre vos..."></textarea>
+      </div>
+
+      <!-- Avatar URL / File -->
+      <div class="form-group">
+        <label for="avatar">Foto de perfil (URL)</label>
+        <input id="avatar" type="text" formControlName="avatar" placeholder="https://ejemplo.com/mi-avatar.jpg">
+      </div>
+
+      @if (successMessage()) {
+        <div class="success-msg">{{ successMessage() }}</div>
+      }
+
+      @if (errorMessage()) {
+        <div class="error-msg">{{ errorMessage() }}</div>
+      }
+
+      <button type="submit" class="btn-submit" [disabled]="registerForm.invalid || isLoading()">
+        {{ isLoading() ? 'Registrando...' : 'Registrarse' }}
+      </button>
+    </form>
+    
+    <p class="auth-link">
+      ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión aquí</a>
+    </p>
+  </div>
+</div>

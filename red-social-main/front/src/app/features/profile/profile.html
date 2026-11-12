@@ -1,0 +1,74 @@
+<div class="profile-container">
+  <div class="profile-card">
+    <div class="profile-header">
+      <button class="btn-back" (click)="volverAPublicaciones()">← Volver a Publicaciones</button>
+      <h2>Mi Perfil</h2>
+    </div>
+
+    @if (currentUser(); as user) {
+      <div class="profile-body">
+        <div class="avatar-container">
+          <img 
+            [src]="user.avatar || 'https://via.placeholder.com/120'" 
+            alt="Foto de perfil de {{ user.username }}" 
+            class="profile-avatar">
+        </div>
+
+        <div class="profile-info">
+          <h3>{{ user.nombre }} {{ user.apellido }}</h3>
+          <p class="username">&#64;{{ user.username }}</p>
+          <span class="badge-role">{{ user.rol || 'usuario' }}</span>
+        </div>
+
+        <div class="profile-details">
+          <div class="detail-item">
+            <strong>Correo electrónico:</strong>
+            <span>{{ user.email }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Fecha de nacimiento:</strong>
+            <span>{{ user.fechaNacimiento || 'No especificada' }}</span>
+          </div>
+          <div class="detail-item bio-section">
+            <strong>Descripción breve:</strong>
+            <p>{{ user.bio || 'Sin descripción cargada.' }}</p>
+          </div>
+        </div>
+
+        <!-- SECCIÓN REQUERIDA POR EL TP: Últimas 3 publicaciones del usuario -->
+        <div class="user-posts-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+          <h3 style="margin-bottom: 15px;">Mis últimas publicaciones</h3>
+
+          @if (cargandoPosts()) {
+            <p class="loading-text">Cargando tus publicaciones...</p>
+          } @else {
+            <div class="posts-list">
+              @for (post of misPublicaciones(); track post._id) {
+                <article class="post-card" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                  <h4 style="margin: 0 0 5px 0; font-size: 1.05rem;">{{ post.titulo }}</h4>
+                  <p style="margin: 0 0 8px 0; font-size: 0.9rem; color: #444;">{{ post.descripcion }}</p>
+                  
+                  @if (post.imagen_url) {
+                    <div style="margin-top: 8px;">
+                      <img [src]="post.imagen_url" alt="Imagen del post" style="max-width: 100%; border-radius: 6px; max-height: 200px; object-fit: cover;" />
+                    </div>
+                  }
+
+                  <div class="post-footer" style="margin-top: 8px; font-size: 0.8rem; color: #666; display: flex; gap: 15px;">
+                    <span>❤️ {{ post.likes?.length || 0 }} Me gusta</span>
+                    <span>💬 {{ post.comentarios?.length || 0 }} Comentarios</span>
+                  </div>
+                </article>
+              } @empty {
+                <p style="color: #777; font-style: italic;">Todavía no realizaste ninguna publicación.</p>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    } @else {
+      <p class="loading-text">Cargando datos del perfil...</p>
+    }
+  </div>
+</div>
