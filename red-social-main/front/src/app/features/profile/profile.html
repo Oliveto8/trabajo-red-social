@@ -1,5 +1,15 @@
 <div class="profile-container">
   <div class="profile-card">
+    
+    <!-- NUEVO: Banner de Feedback visual sin usar alert -->
+    @if (mensajeFeedback(); as feedback) {
+      <div [class]="'feedback-banner ' + feedback.tipo" style="padding: 10px 15px; margin-bottom: 15px; border-radius: 6px; text-align: center; font-weight: 500;"
+           [style.background-color]="feedback.tipo === 'success' ? '#d4edda' : '#f8d7da'"
+           [style.color]="feedback.tipo === 'success' ? '#155724' : '#721c24'">
+        {{ feedback.texto }}
+      </div>
+    }
+
     <div class="profile-header">
       <button class="btn-back" (click)="volverAPublicaciones()">← Volver a Publicaciones</button>
       <h2>Mi Perfil</h2>
@@ -35,7 +45,7 @@
           </div>
         </div>
 
-        <!-- SECCIÓN REQUERIDA POR EL TP: Últimas 3 publicaciones del usuario -->
+        <!-- SECCIÓN DE PUBLICACIONES -->
         <div class="user-posts-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
           <h3 style="margin-bottom: 15px;">Mis últimas publicaciones</h3>
 
@@ -44,7 +54,7 @@
           } @else {
             <div class="posts-list">
               @for (post of misPublicaciones(); track post._id) {
-                <article class="post-card" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                <article class="post-card" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 12px; position: relative;">
                   <h4 style="margin: 0 0 5px 0; font-size: 1.05rem;">{{ post.titulo }}</h4>
                   <p style="margin: 0 0 8px 0; font-size: 0.9rem; color: #444;">{{ post.descripcion }}</p>
                   
@@ -54,9 +64,17 @@
                     </div>
                   }
 
-                  <div class="post-footer" style="margin-top: 8px; font-size: 0.8rem; color: #666; display: flex; gap: 15px;">
-                    <span>❤️ {{ post.likes?.length || 0 }} Me gusta</span>
-                    <span>💬 {{ post.comentarios?.length || 0 }} Comentarios</span>
+                  <div class="post-footer" style="margin-top: 8px; font-size: 0.8rem; color: #666; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 15px;">
+                      <span>❤️ {{ post.likes?.length || 0 }} Me gusta</span>
+                      <span>💬 {{ post.comentarios?.length || 0 }} Comentarios</span>
+                    </div>
+
+                    <button 
+                      (click)="eliminarPublicacion(post._id)" 
+                      style="background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                      Eliminar
+                    </button>
                   </div>
                 </article>
               } @empty {

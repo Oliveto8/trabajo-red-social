@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Post, PostService } from '../../../../core/services/post.service';
 import { apiError } from '../../../../core/services/api-error';
 
@@ -15,6 +16,17 @@ export class PublicacionComponent {
   @Output() postActualizado = new EventEmitter<Post>();
 
   private postService = inject(PostService);
+  private router = inject(Router);
+
+  verDetalle(postId: string) {
+    this.router.navigate(['/publicacion', postId]);
+  }
+
+  // NUEVO: Devuelve como máximo los primeros 3 comentarios para la tarjeta del Home
+  get comentariosVisibles() {
+    if (!this.post.comentarios) return [];
+    return this.post.comentarios.slice(0, 3);
+  }
 
   darLike(postId: string) {
     this.postService.toggleLike(postId).subscribe({

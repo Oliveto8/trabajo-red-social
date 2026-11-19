@@ -41,9 +41,42 @@
         <div class="error-banner">{{ error() }}</div>
       }
 
-      <!-- Lista Dinámica usando el Componente Hijo -->
+      <!-- Barra de filtros y ordenamiento -->
+      <div class="filter-bar" style="display: flex; gap: 8px; margin: 20px 0 15px 0; align-items: center; flex-wrap: wrap;">
+        <span style="font-size: 0.9rem; font-weight: 500; color: #555;">Ordenar por:</span>
+        
+        <button (click)="cambiarOrden('recientes')" 
+                [style.background]="criterioOrden() === 'recientes' ? '#007bff' : '#e0e0e0'"
+                [style.color]="criterioOrden() === 'recientes' ? 'white' : '#333'"
+                style="border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;">
+          📅 Más nuevas
+        </button>
+
+        <button (click)="cambiarOrden('antiguas')" 
+                [style.background]="criterioOrden() === 'antiguas' ? '#007bff' : '#e0e0e0'"
+                [style.color]="criterioOrden() === 'antiguas' ? 'white' : '#333'"
+                style="border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;">
+          📅 Más viejas
+        </button>
+
+        <button (click)="cambiarOrden('mas-likes')" 
+                [style.background]="criterioOrden() === 'mas-likes' ? '#007bff' : '#e0e0e0'"
+                [style.color]="criterioOrden() === 'mas-likes' ? 'white' : '#333'"
+                style="border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;">
+          ❤️ Más Me Gusta
+        </button>
+
+        <button (click)="cambiarOrden('menos-likes')" 
+                [style.background]="criterioOrden() === 'menos-likes' ? '#007bff' : '#e0e0e0'"
+                [style.color]="criterioOrden() === 'menos-likes' ? 'white' : '#333'"
+                style="border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;">
+          ❤️ Menos Me Gusta
+        </button>
+      </div>
+
+      <!-- Lista Dinámica usando la señal computada postsOrdenados() -->
       <div class="posts-list">
-        @for (post of posts(); track post._id) {
+        @for (post of postsOrdenados(); track post._id) {
           @if (post.titulo || post.descripcion) {
             <app-publicacion 
               [post]="post" 
@@ -54,6 +87,14 @@
           <p class="no-posts">No hay publicaciones todavía. ¡Sé el primero en escribir algo!</p>
         }
       </div>
+
+      <!-- SPRINT 3: Invocamos la señal con () -->
+      @if (mostrarModalSesion()) {
+        <app-session-modal 
+          (extender)="extenderSesion()" 
+          (cerrar)="logout()">
+        </app-session-modal>
+      }
 
     </main>
 

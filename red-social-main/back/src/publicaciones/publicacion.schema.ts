@@ -8,6 +8,10 @@ export class Comentario {
 
   @Prop({ required: true, trim: true, maxlength: 300 })
   texto!: string;
+
+  // NUEVO: Atributo exigido por el Sprint 3 para marcar si el comentario fue editado
+  @Prop({ default: false })
+  modificado!: boolean;
 }
 
 export const ComentarioSchema = SchemaFactory.createForClass(Comentario);

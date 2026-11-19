@@ -9,7 +9,6 @@ interface Sesion {
 }
 
 // Perfil extiende de Usuario y hereda todos sus campos obligatorios/opcionales correctamente.
-// Si necesitás agregar algo exclusivo de Perfil que no esté en Usuario, lo ponés acá.
 interface Perfil extends Usuario {
   // Ya no redeclaramos email ni username para evitar conflictos de tipos.
 }
@@ -46,6 +45,16 @@ export class AuthService {
         this.currentUserData.set(perfil);
       }),
     );
+  }
+
+  // SPRINT 3: Validar si el token actual sigue vigente frente al backend
+  autorizarToken() {
+    return this.http.post<{ valido: boolean; usuario: any }>(`${this.url}/autorizar`, {});
+  }
+
+  // SPRINT 3: Refrescar el token por 15 minutos más
+  refrescarToken() {
+    return this.http.post<Sesion>(`${this.url}/refrescar`, {});
   }
 
   restaurarSesion() {
