@@ -66,7 +66,7 @@ export class AuthService {
     return {
       access_token: await this.jwt.signAsync({ sub: id, email }),
       token_type: 'Bearer',
-      expires_in: 3600,
+      expires_in: 120,
     };
   }
 
