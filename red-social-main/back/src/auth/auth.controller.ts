@@ -65,7 +65,7 @@ export class AuthController {
     };
 
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, { expiresIn: '2m' })
     };
   }
 }
