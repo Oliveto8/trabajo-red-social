@@ -5,18 +5,23 @@ import { PublicacionesController } from './publicaciones.controller';
 import { PublicacionesService } from './publicaciones.service';
 import { PortadasService } from './portadas.service';
 import { PortadasInterceptor } from './portadas.interceptor';
-import { UsuarioMongo, UsuarioSchema } from '../auth/usuario.schema';
+import { Usuario, UsuarioSchema } from '../auth/usuario.schema';
+import { AdminGuard } from '../auth/admin.guard';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: PublicacionMongo.name, schema: PublicacionSchema },
-      { name: 'UsuarioMongo', schema: UsuarioSchema }, // Registramos el string exacto que busca Mongoose
-      { name: UsuarioMongo.name, schema: UsuarioSchema },
+      { name: Usuario.name, schema: UsuarioSchema },
     ]),
   ],
   controllers: [PublicacionesController],
-  providers: [PublicacionesService, PortadasService, PortadasInterceptor],
+  providers: [
+    PublicacionesService,
+    PortadasService,
+    PortadasInterceptor,
+    AdminGuard,
+  ],
   exports: [PublicacionesService],
 })
 export class PublicacionesModule {}

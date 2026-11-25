@@ -22,6 +22,7 @@ import { CrearPublicacionDto } from './dto/crear-publicacion.dto';
 import { ActualizarPublicacionDto } from './dto/actualizar-publicacion.dto';
 import { PublicacionesService } from './publicaciones.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('publicaciones')
 @UseGuards(JwtAuthGuard)
@@ -72,6 +73,46 @@ export class PublicacionesController {
       limit: +limit,
       offset: +offset,
     });
+  }
+
+  // =========================================================================
+  // SPRINT 4: Estadísticas (Solo Administrador) — Antes de @Get(':id')
+  // =========================================================================
+
+  @Get('estadisticas/publicaciones-por-usuario')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  estadisticasPublicacionesPorUsuario(
+    @Query('desde') desde?: string,
+    @Query('hasta') hasta?: string,
+  ) {
+    return this.publicacionesService.estadisticasPublicacionesPorUsuario(
+      desde,
+      hasta,
+    );
+  }
+
+  @Get('estadisticas/comentarios')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  estadisticasTotalComentarios(
+    @Query('desde') desde?: string,
+    @Query('hasta') hasta?: string,
+  ) {
+    return this.publicacionesService.estadisticasTotalComentarios(
+      desde,
+      hasta,
+    );
+  }
+
+  @Get('estadisticas/comentarios-por-publicacion')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  estadisticasComentariosPorPublicacion(
+    @Query('desde') desde?: string,
+    @Query('hasta') hasta?: string,
+  ) {
+    return this.publicacionesService.estadisticasComentariosPorPublicacion(
+      desde,
+      hasta,
+    );
   }
 
   @Get(':id')

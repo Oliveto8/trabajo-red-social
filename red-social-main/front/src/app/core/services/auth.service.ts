@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, of, tap } from 'rxjs';
+import { catchError, of, tap, delay } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Usuario } from '../models/usuario.interface';
 
@@ -58,8 +58,9 @@ export class AuthService {
   }
 
   restaurarSesion() {
-    if (!this.accessToken()) return of(null);
+    if (!this.accessToken()) return of(null).pipe(delay(600));
     return this.cargarPerfil().pipe(
+      delay(600),
       catchError(() => {
         this.signOut();
         return of(null);

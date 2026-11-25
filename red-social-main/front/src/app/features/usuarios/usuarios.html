@@ -1,0 +1,130 @@
+<section class="usuarios-container">
+  <header class="header">
+    <div>
+      <h2>Administración de Usuarios</h2>
+      <p class="subtitulo">Alta de usuarios con rol y gestión de baja/alta lógica</p>
+    </div>
+    <button type="button" (click)="cargarUsuarios()" [disabled]="cargando()">
+      Actualizar lista
+    </button>
+  </header>
+
+  @if (error()) {
+    <div class="alerta error">{{ error() }}</div>
+  }
+
+  @if (mensajeOk()) {
+    <div class="alerta ok">{{ mensajeOk() }}</div>
+  }
+
+  <div class="grid-panel">
+    <!-- Formulario de alta -->
+    <article class="card">
+      <h3>Crear nuevo usuario</h3>
+      <form class="form-usuario" (ngSubmit)="crearUsuario()">
+        <label>
+          Nombre
+          <input type="text" name="nombre" [(ngModel)]="nuevoUsuario.nombre" required />
+        </label>
+
+        <label>
+          Apellido
+          <input type="text" name="apellido" [(ngModel)]="nuevoUsuario.apellido" required />
+        </label>
+
+        <label>
+          Username
+          <input type="text" name="username" [(ngModel)]="nuevoUsuario.username" required />
+        </label>
+
+        <label>
+          Email
+          <input type="email" name="email" [(ngModel)]="nuevoUsuario.email" required />
+        </label>
+
+        <label>
+          Contraseña
+          <input
+            type="password"
+            name="password"
+            [(ngModel)]="nuevoUsuario.password"
+            required
+          />
+        </label>
+
+        <label>
+          Rol
+          <select name="rol" [(ngModel)]="nuevoUsuario.rol">
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+          </select>
+        </label>
+
+        <button type="submit" [disabled]="enviando()">
+          {{ enviando() ? 'Creando...' : 'Crear usuario' }}
+        </button>
+      </form>
+    </article>
+
+    <!-- Listado de usuarios -->
+    <article class="card card-lista">
+      <h3>Usuarios registrados</h3>
+
+      @if (cargando()) {
+        <p class="estado-texto">Cargando usuarios...</p>
+      } @else if (usuarios().length === 0) {
+        <p class="estado-texto">No hay usuarios para mostrar.</p>
+      } @else {
+        <div class="tabla-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (u of usuarios(); track obtenerId(u) || u.email) {
+                <tr [class.fila-inactiva]="!estaActivo(u)">
+                  <td>
+                    <strong>&#64;{{ u.username || 'sin-username' }}</strong>
+                    @if (u.nombre || u.apellido) {
+                      <div class="nombre-secundario">{{ u.nombre }} {{ u.apellido }}</div>
+                    }
+                  </td>
+                  <td>{{ u.email }}</td>
+                  <td>
+                    <span class="badge rol">{{ u.rol }}</span>
+                  </td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.activo]="estaActivo(u)"
+                      [class.inactivo]="!estaActivo(u)"
+                    >
+                      {{ estaActivo(u) ? 'Activo' : 'Deshabilitado' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn-accion"
+                      [class.btn-baja]="estaActivo(u)"
+                      [class.btn-alta]="!estaActivo(u)"
+                      (click)="alternarEstado(u)"
+                    >
+                      {{ estaActivo(u) ? 'Dar de baja' : 'Habilitar' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </article>
+  </div>
+</section>

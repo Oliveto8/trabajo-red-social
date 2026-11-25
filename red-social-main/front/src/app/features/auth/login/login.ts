@@ -37,7 +37,7 @@ export class LoginComponent {
         this.authService.iniciarSesion(sesion.access_token).subscribe({
           next: () => {
             this.isLoading.set(false);
-            this.router.navigate(['/home']);
+            this.router.navigate(['/']);
           },
           error: (error) => {
             this.authService.signOut();

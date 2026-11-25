@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -26,15 +27,21 @@ export class AuthService {
         passwordHash: await bcrypt.hash(datos.password, 10),
         nombre: datos.nombre,
         apellido: datos.apellido,
-        username: datos.username, // <-- Agregado
-        fechaNacimiento: datos.fechaNacimiento ? new Date(datos.fechaNacimiento) : undefined, // <-- Agregado
-        bio: datos.bio ?? '', // <-- Agregado
-        avatar: datos.avatar ?? '', // <-- Agregado
+        username: datos.username,
+        fechaNacimiento: datos.fechaNacimiento
+          ? new Date(datos.fechaNacimiento)
+          : undefined,
+        bio: datos.bio ?? '',
+        avatar: datos.avatar ?? '',
+        activo: true,
       });
-      return this.token(usuario.id as string, usuario.email);
+      return this.token(
+        usuario.id as string,
+        usuario.email,
+        usuario.rol ?? 'user',
+      );
     } catch (error) {
       if (error instanceof mongo.MongoServerError && error.code === 11000) {
-        // Detectamos si el duplicado fue por username o email
         const field = Object.keys(error.keyPattern || {})[0];
         if (field === 'username') {
           throw new ConflictException('El nombre de usuario ya está en uso');
@@ -59,12 +66,23 @@ export class AuthService {
     if (!passwordValida) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
-    return this.token(usuario.id as string, usuario.email);
+
+    if (usuario.activo === false) {
+      throw new ForbiddenException(
+        'Tu cuenta está deshabilitada y no está autorizada para ingresar',
+      );
+    }
+
+    return this.token(
+      usuario.id as string,
+      usuario.email,
+      usuario.rol ?? 'user',
+    );
   }
 
-  private async token(id: string, email: string) {
+  private async token(id: string, email: string, rol: string) {
     return {
-      access_token: await this.jwt.signAsync({ sub: id, email }),
+      access_token: await this.jwt.signAsync({ sub: id, email, rol }),
       token_type: 'Bearer',
       expires_in: 120,
     };
@@ -78,11 +96,12 @@ export class AuthService {
       email: usuario.email,
       nombre: usuario.nombre ?? '',
       apellido: usuario.apellido ?? '',
-      username: usuario.username ?? '', // <-- Agregado
-      fechaNacimiento: usuario.fechaNacimiento ?? null, // <-- Agregado
-      bio: usuario.bio ?? '', // <-- Agregado
-      avatar: usuario.avatar ?? '', // <-- Agregado
+      username: usuario.username ?? '',
+      fechaNacimiento: usuario.fechaNacimiento ?? null,
+      bio: usuario.bio ?? '',
+      avatar: usuario.avatar ?? '',
       rol: usuario.rol ?? 'user',
+      activo: usuario.activo ?? true,
     };
   }
 }

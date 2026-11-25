@@ -11,13 +11,15 @@
     @if (authService.currentUser()) {
       <!-- Pantalla de perfil del usuario logueado -->
       <a routerLink="/profile" routerLinkActive="active">👤 Mi Perfil</a>
-    }
-    
-    <!-- Enlaces dinámicos según el estado de autenticación -->
-    @if (authService.currentUser()) {
+
+      @if (authService.currentUserData()?.rol === 'admin') {
+      <a routerLink="/estadisticas" routerLinkActive="active">📊 Estadísticas</a>
+      <a routerLink="/usuarios" routerLinkActive="active">👥 Usuarios</a>
+      }
+
       <a href="#" (click)="logout(); $event.preventDefault()">🚪 Cerrar Sesión</a>
     } @else {
       <a routerLink="/login" routerLinkActive="active">🔑 Iniciar Sesión</a>
     }
   </nav>
-</header> 
+</header>

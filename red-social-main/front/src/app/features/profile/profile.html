@@ -37,7 +37,7 @@
           </div>
           <div class="detail-item">
             <strong>Fecha de nacimiento:</strong>
-            <span>{{ user.fechaNacimiento || 'No especificada' }}</span>
+            <span>{{ user.fechaNacimiento ? (user.fechaNacimiento | date:'dd/MM/yyyy':'UTC') : 'No cargada' }}</span>
           </div>
           <div class="detail-item bio-section">
             <strong>Descripción breve:</strong>

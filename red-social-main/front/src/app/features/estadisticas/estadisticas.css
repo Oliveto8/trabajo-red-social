@@ -1,0 +1,151 @@
+.estadisticas-container {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.subtitulo {
+  margin: 0.25rem 0 0;
+  opacity: 0.75;
+  font-size: 0.9rem;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.filtros input {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.filtros button {
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+}
+
+.grid-estadisticas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.25rem;
+  background: #fff;
+}
+
+.card h3 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+.card-kpi {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 200px;
+}
+
+.kpi-numero {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.kpi-detalle {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.card-ancha {
+  grid-column: 1 / -1;
+}
+
+.lista-barras {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.fila-barra {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.etiqueta {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+
+.etiqueta span {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.barra-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.barra {
+  height: 14px;
+  min-width: 4px;
+  border-radius: 999px;
+  background: #2563eb;
+  transition: width 0.25s ease;
+}
+
+.barra-secundaria {
+  background: #0d9488;
+}
+
+.valor {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.alerta-error {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.vacio,
+.cargando {
+  opacity: 0.75;
+  font-size: 0.95rem;
+}

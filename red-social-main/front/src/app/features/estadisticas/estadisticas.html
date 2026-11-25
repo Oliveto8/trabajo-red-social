@@ -1,0 +1,104 @@
+<section class="estadisticas-container">
+  <header class="header">
+    <div>
+      <h2>Estadísticas de Publicaciones</h2>
+      <p class="subtitulo">Métricas filtrables por rango de fechas (solo administrador)</p>
+    </div>
+
+    <form class="filtros" (ngSubmit)="cargarEstadisticas()">
+      <label>
+        Desde
+        <input type="date" name="desde" [(ngModel)]="desde" />
+      </label>
+      <label>
+        Hasta
+        <input type="date" name="hasta" [(ngModel)]="hasta" />
+      </label>
+      <button type="submit" [disabled]="cargando()">Filtrar</button>
+      <button type="button" (click)="limpiarFiltros()" [disabled]="cargando()">
+        Limpiar
+      </button>
+    </form>
+  </header>
+
+  @if (error()) {
+    <div class="alerta-error">{{ error() }}</div>
+  }
+
+  @if (cargando()) {
+    <div class="cargando">Cargando estadísticas...</div>
+  } @else {
+    <div class="grid-estadisticas">
+      <!-- 1. Publicaciones por usuario -->
+      <article class="card">
+        <h3>Publicaciones por usuario</h3>
+        @if (porUsuario().length === 0) {
+          <p class="vacio">Sin publicaciones en el período seleccionado.</p>
+        } @else {
+          <div class="lista-barras">
+            @for (item of porUsuario(); track item.usuarioId) {
+              <div class="fila-barra">
+                <div class="etiqueta">
+                  <strong>&#64;{{ item.username }}</strong>
+                  @if (item.nombre || item.apellido) {
+                    <span>({{ item.nombre }} {{ item.apellido }})</span>
+                  }
+                </div>
+                <div class="barra-wrap">
+                  <div
+                    class="barra"
+                    [style.width.%]="porcentajeUsuario(item.totalPublicaciones)"
+                  ></div>
+                  <span class="valor">{{ item.totalPublicaciones }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </article>
+
+      <!-- 2. Total de comentarios en el lapso -->
+      <article class="card card-kpi">
+        <h3>Comentarios en el lapso</h3>
+        <div class="kpi-numero">{{ totalComentarios() }}</div>
+        <p class="kpi-detalle">
+          @if (desde || hasta) {
+            <span>
+              Rango: {{ desde || 'inicio' }} → {{ hasta || 'hoy' }}
+            </span>
+          } @else {
+            <span>Todo el historial disponible</span>
+          }
+        </p>
+      </article>
+
+      <!-- 3. Comentarios por publicación -->
+      <article class="card card-ancha">
+        <h3>Comentarios por publicación</h3>
+        @if (porPublicacion().length === 0) {
+          <p class="vacio">Sin publicaciones en el período seleccionado.</p>
+        } @else {
+          <div class="lista-barras">
+            @for (pub of porPublicacion(); track pub.publicacionId) {
+              <div class="fila-barra">
+                <div class="etiqueta">
+                  <strong>{{ pub.titulo }}</strong>
+                  @if (pub.autorUsername) {
+                    <span>por &#64;{{ pub.autorUsername }}</span>
+                  }
+                </div>
+                <div class="barra-wrap">
+                  <div
+                    class="barra barra-secundaria"
+                    [style.width.%]="porcentajePublicacion(pub.totalComentarios)"
+                  ></div>
+                  <span class="valor">{{ pub.totalComentarios }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </article>
+    </div>
+  }
+</section>

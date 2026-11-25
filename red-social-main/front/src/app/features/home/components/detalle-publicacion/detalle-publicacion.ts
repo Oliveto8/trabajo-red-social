@@ -19,17 +19,23 @@ export class DetallePublicacionComponent implements OnInit {
   private authService = inject(AuthService);
 
   currentUser = this.authService.currentUser;
-  
+  currentUserData = this.authService.currentUserData;
+
   post = signal<Post | null>(null);
   comentarios = signal<Comentario[]>([]);
   totalComentarios = signal(0);
-  
+  confirmandoEliminar = signal(false);
+  eliminando = signal(false);
+
+  errorEliminar = signal<string | null>(null);
+  errorComentario = signal<string | null>(null);
+
   // Paginación de comentarios (trae de 5 en 5)
   limit = 5;
   offset = 0;
-  
+
   nuevoComentarioTexto = '';
-  
+
   // Estado para editar comentarios
   comentarioEditandoId = signal<string | null>(null);
   textoEditado = '';
@@ -42,15 +48,52 @@ export class DetallePublicacionComponent implements OnInit {
     }
   }
 
+  esAdmin(): boolean {
+    return this.currentUserData()?.rol === 'admin';
+  }
+
+  pedirConfirmacionEliminar() {
+    if (!this.post() || !this.esAdmin() || this.eliminando()) return;
+    this.errorEliminar.set(null);
+    this.confirmandoEliminar.set(true);
+  }
+
+  cancelarEliminar() {
+    this.confirmandoEliminar.set(false);
+  }
+
+  confirmarEliminarPublicacion() {
+    const currentPost = this.post();
+    if (!currentPost || !this.esAdmin() || this.eliminando()) return;
+
+    this.errorEliminar.set(null);
+    this.confirmandoEliminar.set(false);
+    this.eliminando.set(true);
+
+    this.postService.eliminarPublicacion(currentPost._id).subscribe({
+      next: () => {
+        this.eliminando.set(false);
+        this.postService.posts.update((lista) =>
+          lista.filter((item) => item._id !== currentPost._id)
+        );
+        this.router.navigate(['/home']);
+      },
+      error: (err) => {
+        console.error('Error al eliminar la publicación', err);
+        this.eliminando.set(false);
+        this.errorEliminar.set('No se pudo eliminar la publicación');
+      },
+    });
+  }
+
   cargarPublicacion(id: string) {
     this.postService.buscar(id).subscribe({
       next: (data: any) => {
-        // Aseguramos que se guarde correctamente en la señal del post
         this.post.set(data);
       },
       error: (err) => {
         console.error('Error al cargar la publicación', err);
-      }
+      },
     });
   }
 
@@ -65,11 +108,10 @@ export class DetallePublicacionComponent implements OnInit {
         if (reiniciar) {
           this.comentarios.set(res.comentarios);
         } else {
-          // Acumulamos para el botón "Cargar más"
-          this.comentarios.update(actuales => [...actuales, ...res.comentarios]);
+          this.comentarios.update((actuales) => [...actuales, ...res.comentarios]);
         }
       },
-      error: (err) => console.error('Error al cargar comentarios', err)
+      error: (err) => console.error('Error al cargar comentarios', err),
     });
   }
 
@@ -85,19 +127,22 @@ export class DetallePublicacionComponent implements OnInit {
     const currentPost = this.post();
     if (!currentPost || !this.nuevoComentarioTexto.trim()) return;
 
+    this.errorComentario.set(null);
     this.postService.comentar(currentPost._id, this.nuevoComentarioTexto).subscribe({
       next: (postActualizado) => {
         this.post.set(postActualizado);
         this.nuevoComentarioTexto = '';
-        // Recargamos la primera página de comentarios para ver el nuevo arriba
         this.cargarComentarios(currentPost._id, true);
       },
-      error: (err) => alert('No se pudo enviar el comentario')
+      error: (err) => {
+        console.error('Error al enviar el comentario', err);
+        this.errorComentario.set('No se pudo enviar el comentario');
+      },
     });
   }
 
-  // Activar modo edición de un comentario
   iniciarEdicion(comentario: Comentario) {
+    this.errorComentario.set(null);
     this.comentarioEditandoId.set(comentario._id || null);
     this.textoEditado = comentario.texto;
   }
@@ -111,26 +156,30 @@ export class DetallePublicacionComponent implements OnInit {
     const currentPost = this.post();
     if (!currentPost || !this.textoEditado.trim()) return;
 
+    this.errorComentario.set(null);
     this.postService.modificarComentario(currentPost._id, comentarioId, this.textoEditado).subscribe({
       next: (postActualizado) => {
         this.post.set(postActualizado);
         this.comentarioEditandoId.set(null);
         this.textoEditado = '';
-        // Refrescamos la lista de comentarios
         this.cargarComentarios(currentPost._id, true);
       },
-      error: (err) => alert('No se pudo editar el comentario')
+      error: (err) => {
+        console.error('Error al editar el comentario', err);
+        this.errorComentario.set('No se pudo editar el comentario');
+      },
     });
   }
 
-    // Método para verificar si el usuario logueado es el autor del comentario
   esAutorComentario(comentario: Comentario): boolean {
     const user = this.currentUser();
     if (!user) return false;
-    
+
     const userId = (user as any).id || (user as any)._id;
-    const autorId = comentario.autor?._id ? comentario.autor._id.toString() : comentario.autor?.toString();
-    
+    const autorId = comentario.autor?._id
+      ? comentario.autor._id.toString()
+      : comentario.autor?.toString();
+
     return autorId === userId;
   }
 

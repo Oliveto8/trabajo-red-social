@@ -6,6 +6,7 @@ import { LogsMiddleware } from './middleware/logs.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PublicacionesModule } from './publicaciones/publicaciones.module'; // <- Importación correcta
+import { UsuariosModule } from './usuarios/usuarios.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { existsSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
@@ -24,6 +25,7 @@ if (!mongoUri) {
   imports: [
     MongooseModule.forRoot(mongoUri),
     PublicacionesModule, // <- Registrado aquí
+    UsuariosModule,
     AuthModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
   ],

@@ -4,14 +4,54 @@
   @if (post(); as p) {
     <article class="post-grande" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
       
-      <!-- Cabecera del Autor -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-        <img [src]="p.autor.avatar || 'https://via.placeholder.com/40'" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-        <div>
-          <h4 style="margin: 0; font-size: 1rem;">{{ p.autor.nombre }} {{ p.autor.apellido }}</h4>
-          <span style="font-size: 0.8rem; color: #666;">&#64;{{ p.autor.username }}</span>
+      <!-- Cabecera del Autor + Acción Admin -->
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img [src]="p.autor.avatar || 'https://via.placeholder.com/40'" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+          <div>
+            <h4 style="margin: 0; font-size: 1rem;">{{ p.autor.nombre }} {{ p.autor.apellido }}</h4>
+            <span style="font-size: 0.8rem; color: #666;">&#64;{{ p.autor.username }}</span>
+          </div>
         </div>
+
+        @if (esAdmin()) {
+          @if (!confirmandoEliminar()) {
+            <button
+              type="button"
+              (click)="pedirConfirmacionEliminar()"
+              [disabled]="eliminando()"
+              style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
+            >
+              {{ eliminando() ? 'Eliminando...' : '🗑️ Eliminar publicación' }}
+            </button>
+          } @else {
+            <div style="display: flex; align-items: center; gap: 6px; background: #fff5f5; border: 1px solid #f5c2c7; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem;">
+              <span style="color: #842029;">¿Eliminar?</span>
+              <button
+                type="button"
+                (click)="confirmarEliminarPublicacion()"
+                [disabled]="eliminando()"
+                style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer;"
+              >
+                Sí
+              </button>
+              <button
+                type="button"
+                (click)="cancelarEliminar()"
+                style="background: #6c757d; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer;"
+              >
+                No
+              </button>
+            </div>
+          }
+        }
       </div>
+
+      @if (errorEliminar()) {
+        <p style="background: #f8d7da; color: #842029; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 0.9rem;">
+          {{ errorEliminar() }}
+        </p>
+      }
 
       <h2 style="margin-bottom: 10px;">{{ p.titulo }}</h2>
       <p style="font-size: 1.05rem; color: #333; line-height: 1.5;">{{ p.descripcion }}</p>
@@ -30,6 +70,12 @@
       <section style="margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px;">
         <h3>Comentarios ({{ totalComentarios() }})</h3>
 
+        @if (errorComentario()) {
+          <p style="background: #f8d7da; color: #842029; padding: 8px 12px; border-radius: 4px; margin-bottom: 10px; font-size: 0.85rem;">
+            {{ errorComentario() }}
+          </p>
+        }
+
         <!-- Escribir Comentario -->
         <div style="display: flex; gap: 10px; margin: 15px 0;">
           <input [(ngModel)]="nuevoComentarioTexto" placeholder="Escribe un comentario..." style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
@@ -45,8 +91,8 @@
                 
                 <div style="display: flex; gap: 8px; align-items: center;">
                   @if (($any(c).modificado)) {
-                <span style="font-size: 0.7rem; color: #888; font-style: italic;">(Editado)</span>
-                }
+                    <span style="font-size: 0.7rem; color: #888; font-style: italic;">(Editado)</span>
+                  }
                   <span style="font-size: 0.75rem; color: #888;">{{ c.createdAt | date:'short' }}</span>
                 </div>
               </div>
@@ -65,7 +111,7 @@
 
                 <!-- Botón de editar solo si el comentario pertenece al usuario logueado -->
                 @if (esAutorComentario(c)) {
-                <button (click)="iniciarEdicion(c)" style="background: none; border: none; color: #007bff; cursor: pointer; font-size: 0.75rem; padding: 0; margin-top: 5px;">Editar</button>
+                  <button (click)="iniciarEdicion(c)" style="background: none; border: none; color: #007bff; cursor: pointer; font-size: 0.75rem; padding: 0; margin-top: 5px;">Editar</button>
                 }
               }
             </div>

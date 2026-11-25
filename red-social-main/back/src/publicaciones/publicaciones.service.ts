@@ -9,6 +9,7 @@ import { Model, isObjectIdOrHexString, Types } from 'mongoose';
 import { CrearPublicacionDto } from './dto/crear-publicacion.dto';
 import { ActualizarPublicacionDto } from './dto/actualizar-publicacion.dto';
 import { PublicacionMongo, PublicacionDocument } from './publicacion.schema';
+import { Usuario } from '../auth/usuario.schema';
 import { PortadasService } from './portadas.service';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class PublicacionesService {
   constructor(
     @InjectModel(PublicacionMongo.name)
     private readonly modelo: Model<PublicacionDocument>,
+    @InjectModel(Usuario.name)
+    private readonly usuariosModelo: Model<Usuario>,
     private readonly portadas: PortadasService,
   ) {}
 
@@ -130,7 +133,11 @@ export class PublicacionesService {
     );
 
     return this.modelo
-      .findByIdAndUpdate(id, { $set: cambios }, { new: true, runValidators: true })
+      .findByIdAndUpdate(
+        id,
+        { $set: cambios },
+        { new: true, runValidators: true },
+      )
       .populate('autor', 'nombre apellido username avatar')
       .populate('comentarios.autor', 'nombre apellido username avatar')
       .exec();
@@ -215,7 +222,11 @@ export class PublicacionesService {
   // SPRINT 3: Paginación, Ordenamiento y Edición de Comentarios
   // =========================================================================
 
-  async obtenerComentarios(postId: string, limit: number = 10, offset: number = 0) {
+  async obtenerComentarios(
+    postId: string,
+    limit: number = 10,
+    offset: number = 0,
+  ) {
     this.validarId(postId);
 
     const pub = await this.modelo
@@ -231,7 +242,10 @@ export class PublicacionesService {
     );
 
     const total = comentariosOrdenados.length;
-    const comentariosPaginados = comentariosOrdenados.slice(offset, offset + limit);
+    const comentariosPaginados = comentariosOrdenados.slice(
+      offset,
+      offset + limit,
+    );
 
     return {
       total,
@@ -283,8 +297,159 @@ export class PublicacionesService {
   }
 
   // =========================================================================
+  // SPRINT 4: Estadísticas para Administrador
+  // =========================================================================
+
+  async estadisticasPublicacionesPorUsuario(desde?: string, hasta?: string) {
+    const rango = this.construirRangoFechas(desde, hasta);
+    const matchEtapa: any = { activo: { $ne: false } };
+
+    if (rango) {
+      matchEtapa.createdAt = rango;
+    }
+
+    return this.modelo
+      .aggregate([
+        { $match: matchEtapa },
+        {
+          $group: {
+            _id: '$autor',
+            totalPublicaciones: { $sum: 1 },
+          },
+        },
+        {
+          $lookup: {
+            from: this.usuariosModelo.collection.name,
+            localField: '_id',
+            foreignField: '_id',
+            as: 'usuario',
+          },
+        },
+        {
+          $unwind: {
+            path: '$usuario',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            usuarioId: '$_id',
+            nombre: { $ifNull: ['$usuario.nombre', ''] },
+            apellido: { $ifNull: ['$usuario.apellido', ''] },
+            username: { $ifNull: ['$usuario.username', 'Sin usuario'] },
+            email: { $ifNull: ['$usuario.email', ''] },
+            totalPublicaciones: 1,
+          },
+        },
+        { $sort: { totalPublicaciones: -1 } },
+      ])
+      .exec();
+  }
+
+  async estadisticasTotalComentarios(desde?: string, hasta?: string) {
+    const rango = this.construirRangoFechas(desde, hasta);
+    const pipeline: any[] = [
+      { $match: { activo: { $ne: false } } },
+      { $unwind: '$comentarios' },
+    ];
+
+    if (rango) {
+      pipeline.push({
+        $match: {
+          'comentarios.createdAt': rango,
+        },
+      });
+    }
+
+    pipeline.push({
+      $count: 'totalComentarios',
+    });
+
+    const resultado = await this.modelo.aggregate(pipeline).exec();
+    return {
+      totalComentarios: resultado[0]?.totalComentarios ?? 0,
+    };
+  }
+
+  async estadisticasComentariosPorPublicacion(desde?: string, hasta?: string) {
+    const rango = this.construirRangoFechas(desde, hasta);
+    const matchPub: any = { activo: { $ne: false } };
+
+    if (rango) {
+      matchPub.createdAt = rango;
+    }
+
+    return this.modelo
+      .aggregate([
+        { $match: matchPub },
+        {
+          $lookup: {
+            from: this.usuariosModelo.collection.name,
+            localField: 'autor',
+            foreignField: '_id',
+            as: 'autorDoc',
+          },
+        },
+        {
+          $unwind: {
+            path: '$autorDoc',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            publicacionId: '$_id',
+            titulo: '$titulo',
+            autorUsername: { $ifNull: ['$autorDoc.username', ''] },
+            createdAt: '$createdAt',
+            totalComentarios: { $size: { $ifNull: ['$comentarios', []] } },
+          },
+        },
+        { $sort: { totalComentarios: -1, createdAt: -1 } },
+      ])
+      .exec();
+  }
+
+  // =========================================================================
   // Helpers Internos
   // =========================================================================
+
+  private construirRangoFechas(
+    desde?: string,
+    hasta?: string,
+  ): { $gte?: Date; $lte?: Date } | null {
+    const rango: { $gte?: Date; $lte?: Date } = {};
+
+    if (desde) {
+      const fechaDesde = new Date(desde);
+      if (Number.isNaN(fechaDesde.getTime())) {
+        throw new BadRequestException('Parámetro "desde" inválido');
+      }
+      fechaDesde.setHours(0, 0, 0, 0);
+      rango.$gte = fechaDesde;
+    }
+
+    if (hasta) {
+      const fechaHasta = new Date(hasta);
+      if (Number.isNaN(fechaHasta.getTime())) {
+        throw new BadRequestException('Parámetro "hasta" inválido');
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(hasta)) {
+        fechaHasta.setHours(23, 59, 59, 999);
+      }
+      rango.$lte = fechaHasta;
+    }
+
+    if (rango.$gte && rango.$lte && rango.$gte > rango.$lte) {
+      throw new BadRequestException(
+        'La fecha "desde" no puede ser mayor que "hasta"',
+      );
+    }
+
+    return Object.keys(rango).length > 0 ? rango : null;
+  }
 
   private validarId(id: string): void {
     if (!isObjectIdOrHexString(id)) {

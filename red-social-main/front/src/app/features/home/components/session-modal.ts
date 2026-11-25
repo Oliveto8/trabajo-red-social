@@ -12,7 +12,6 @@ import { CommonModule } from '@angular/common';
         <p>Tu sesión está por caducar por motivos de seguridad. ¿Deseás extenderla?</p>
         <div class="modal-actions">
           <button class="btn-extender" (click)="extender.emit()">Extender Sesión</button>
-          <button class="btn-salir" (click)="cerrar.emit()">Cerrar Sesión</button>
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { type HydratedDocument, Types } from 'mongoose';
 
 @Schema({ timestamps: true, versionKey: false })
 export class Comentario {
-  @Prop({ type: Types.ObjectId, ref: 'UsuarioMongo', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Usuario', required: true })
   autor!: Types.ObjectId;
 
   @Prop({ required: true, trim: true, maxlength: 300 })
@@ -31,11 +31,11 @@ export class PublicacionMongo {
   imagen_public_id?: string;
 
   // Relación con el usuario autenticado (ObjectId que referencia a la colección de usuarios)
-  @Prop({ type: Types.ObjectId, ref: 'UsuarioMongo', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Usuario', required: true })
   autor!: Types.ObjectId;
 
   // Lista de usuarios que dieron "Me gusta"
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'UsuarioMongo' }], default: [] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Usuario' }], default: [] })
   likes!: Types.ObjectId[];
 
   // Lista de comentarios integrados

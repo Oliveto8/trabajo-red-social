@@ -25,12 +25,15 @@ export class Usuario {
 
   @Prop({ type: Date })
   fechaNacimiento!: Date;
-
+  
   @Prop({ default: '', maxlength: 250 })
   bio!: string;
 
   @Prop({ default: '' })
   avatar!: string;
+
+  @Prop({ default: true })
+  activo!: boolean;
 }
 
 export const UsuarioSchema = SchemaFactory.createForClass(Usuario);
