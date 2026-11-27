@@ -1,8 +1,8 @@
 <section class="estadisticas-container">
   <header class="header">
     <div>
-      <h2>Estadísticas de Publicaciones</h2>
-      <p class="subtitulo">Métricas filtrables por rango de fechas (solo administrador)</p>
+      <h2>Estadísticas de Publicaciones y Actividad</h2>
+      <p class="subtitulo">Métricas filtrables por rango de fechas</p>
     </div>
 
     <form class="filtros" (ngSubmit)="cargarEstadisticas()">
@@ -45,10 +45,12 @@
                   }
                 </div>
                 <div class="barra-wrap">
-                  <div
-                    class="barra"
-                    [style.width.%]="porcentajeUsuario(item.totalPublicaciones)"
-                  ></div>
+                  <div class="barra-track">
+                    <div
+                      class="barra"
+                      [style.width.%]="porcentajeUsuario(item.totalPublicaciones)"
+                    ></div>
+                  </div>
                   <span class="valor">{{ item.totalPublicaciones }}</span>
                 </div>
               </div>
@@ -88,14 +90,143 @@
                   }
                 </div>
                 <div class="barra-wrap">
-                  <div
-                    class="barra barra-secundaria"
-                    [style.width.%]="porcentajePublicacion(pub.totalComentarios)"
-                  ></div>
+                  <div class="barra-track">
+                    <div
+                      class="barra barra-secundaria"
+                      [style.width.%]="porcentajePublicacion(pub.totalComentarios)"
+                    ></div>
+                  </div>
                   <span class="valor">{{ pub.totalComentarios }}</span>
                 </div>
               </div>
             }
+          </div>
+        }
+      </article>
+
+      <!-- 4. Ingresos (login) por usuario (Barras) -->
+      <article class="card">
+        <h3>Ingresos (login) por usuario</h3>
+        @if (loginsPorUsuario().length === 0) {
+          <p class="vacio">Sin registros de ingresos en el período seleccionado.</p>
+        } @else {
+          <div class="lista-barras">
+            @for (item of loginsPorUsuario(); track item.usuarioId) {
+              <div class="fila-barra">
+                <div class="etiqueta">
+                  <strong>&#64;{{ item.username }}</strong>
+                  @if (item.nombre || item.apellido) {
+                    <span>({{ item.nombre }} {{ item.apellido }})</span>
+                  }
+                </div>
+                <div class="barra-wrap">
+                  <div class="barra-track">
+                    <div
+                      class="barra"
+                      [style.width.%]="(item.totalLogins / maxLogins()) * 100"
+                    ></div>
+                  </div>
+                  <span class="valor">{{ item.totalLogins }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </article>
+
+      <!-- 5. Visitas a mi perfil (Dona, excluyendo auto-visitas) -->
+      <article class="card">
+        <h3>Visitas a mi perfil ({{ visitasPerfil().totalGeneral }})</h3>
+        @if (segmentosVisitas().length === 0) {
+          <p class="vacio">Aún no recibiste visitas de otros usuarios.</p>
+        } @else {
+          <div class="dona-layout">
+            <svg viewBox="0 0 160 160" class="dona-svg" role="img" aria-label="Visitas a perfil">
+              <circle
+                cx="80"
+                cy="80"
+                [attr.r]="radioDona"
+                fill="none"
+                stroke="#e5e7eb"
+                stroke-width="20"
+              />
+              @for (seg of segmentosVisitas(); track seg.label) {
+                <circle
+                  cx="80"
+                  cy="80"
+                  [attr.r]="radioDona"
+                  fill="none"
+                  [attr.stroke]="seg.color"
+                  stroke-width="20"
+                  [attr.stroke-dasharray]="seg.dashArray"
+                  [attr.stroke-dashoffset]="seg.dashOffset"
+                  transform="rotate(-90 80 80)"
+                />
+              }
+              <text x="80" y="76" text-anchor="middle" class="dona-numero">
+                {{ visitasPerfil().totalGeneral }}
+              </text>
+              <text x="80" y="94" text-anchor="middle" class="dona-sub">visitas</text>
+            </svg>
+
+            <ul class="leyenda-lista">
+              @for (seg of segmentosVisitas(); track seg.label) {
+                <li>
+                  <span class="punto" [style.background]="seg.color"></span>
+                  <span>{{ seg.label }}</span>
+                  <strong>{{ seg.value }}</strong>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </article>
+
+      <!-- 6. "Me gusta" otorgados por día (Líneas) -->
+      <article class="card card-ancha">
+        <h3>"Me gusta" otorgados por día</h3>
+        @if (puntosLineaLikes().length === 0) {
+          <p class="vacio">No hay "Me gusta" registrados en este rango.</p>
+        } @else {
+          <div class="linea-wrapper">
+            <svg viewBox="0 0 460 180" class="linea-svg" role="img" aria-label="Me gusta por día">
+              <line x1="36" y1="156" x2="424" y2="156" stroke="#cbd5e1" stroke-width="1.5" />
+              <line x1="36" y1="24" x2="36" y2="156" stroke="#cbd5e1" stroke-width="1.5" />
+
+              @if (puntosLineaLikes().length > 1) {
+                <polyline
+                  fill="none"
+                  stroke="#e11d48"
+                  stroke-width="2.5"
+                  [attr.points]="polylineLikes()"
+                />
+              }
+
+              @for (pt of puntosLineaLikes(); track pt.fecha) {
+                <circle
+                  [attr.cx]="pt.x"
+                  [attr.cy]="pt.y"
+                  r="4.5"
+                  fill="#e11d48"
+                />
+                <text
+                  [attr.x]="pt.x"
+                  [attr.y]="pt.y - 8"
+                  text-anchor="middle"
+                  class="etiqueta-punto"
+                >
+                  {{ pt.totalLikes }}
+                </text>
+                <text
+                  [attr.x]="pt.x"
+                  y="172"
+                  text-anchor="middle"
+                  class="etiqueta-eje"
+                >
+                  {{ pt.fecha.slice(5) }}
+                </text>
+              }
+            </svg>
           </div>
         }
       </article>

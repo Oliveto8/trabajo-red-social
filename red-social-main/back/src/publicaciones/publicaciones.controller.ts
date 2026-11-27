@@ -115,6 +115,44 @@ export class PublicacionesController {
     );
   }
 
+  // =========================================================================
+  // SPRINT 5: Estadísticas Nuevas — Antes de @Get(':id')
+  // =========================================================================
+
+  @Get('estadisticas/logins-por-usuario')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  estadisticasLoginsPorUsuario(
+    @Query('desde') desde?: string,
+    @Query('hasta') hasta?: string,
+  ) {
+    return this.publicacionesService.estadisticasLoginsPorUsuario(desde, hasta);
+  }
+
+  @Get('estadisticas/visitas-perfil')
+  @UseGuards(JwtAuthGuard)
+  estadisticasVisitasPerfil(
+    @Req() req: any,
+    @Query('usuarioId') usuarioId?: string,
+    @Query('desde') desde?: string,
+    @Query('hasta') hasta?: string,
+  ) {
+    const objetivoId = usuarioId || this.extraerUsuarioId(req);
+    return this.publicacionesService.estadisticasVisitasPerfil(
+      objetivoId,
+      desde,
+      hasta,
+    );
+  }
+
+  @Get('estadisticas/likes-por-dia')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  estadisticasLikesPorDia(
+    @Query('desde') desde?: string,
+    @Query('hasta') hasta?: string,
+  ) {
+    return this.publicacionesService.estadisticasLikesPorDia(desde, hasta);
+  }
+
   @Get(':id')
   buscar(@Param('id') id: string) {
     return this.publicacionesService.buscar(id);

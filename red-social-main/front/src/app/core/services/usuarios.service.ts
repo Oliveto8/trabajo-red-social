@@ -12,6 +12,9 @@ export interface UsuarioAdminItem {
   username?: string;
   rol: 'user' | 'admin' | string;
   activo?: boolean;
+  fechaNacimiento?: string;
+  bio?: string;
+  avatar?: string;
 }
 
 export interface CrearUsuarioAdminPayload {
@@ -33,6 +36,14 @@ export class UsuariosService {
 
   listar(): Observable<UsuarioAdminItem[]> {
     return this.http.get<UsuarioAdminItem[]>(this.baseUrl);
+  }
+
+  obtenerPorId(id: string): Observable<UsuarioAdminItem> {
+    return this.http.get<UsuarioAdminItem>(`${this.baseUrl}/${id}`);
+  }
+
+  registrarVisita(perfilId: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${perfilId}/visita`, {});
   }
 
   crear(datos: CrearUsuarioAdminPayload): Observable<UsuarioAdminItem> {

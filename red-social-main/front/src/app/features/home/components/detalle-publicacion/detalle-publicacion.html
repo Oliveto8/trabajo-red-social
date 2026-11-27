@@ -6,13 +6,35 @@
       
       <!-- Cabecera del Autor + Acción Admin -->
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <img [src]="p.autor.avatar || 'https://via.placeholder.com/40'" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-          <div>
-            <h4 style="margin: 0; font-size: 1rem;">{{ p.autor.nombre }} {{ p.autor.apellido }}</h4>
-            <span style="font-size: 0.8rem; color: #666;">&#64;{{ p.autor.username }}</span>
+        @if (obtenerAutorId(p.autor); as autorId) {
+          <a
+            [routerLink]="['/profile', autorId]"
+            (click)="$event.stopPropagation()"
+            style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; cursor: pointer;"
+          >
+            <img
+              [src]="p.autor.avatar || 'https://via.placeholder.com/40'"
+              alt="Avatar"
+              style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"
+            >
+            <div>
+              <h4 style="margin: 0; font-size: 1rem;">{{ p.autor.nombre }} {{ p.autor.apellido }}</h4>
+              <span style="font-size: 0.8rem; color: #666;">&#64;{{ p.autor.username }}</span>
+            </div>
+          </a>
+        } @else {
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <img
+              [src]="p.autor.avatar || 'https://via.placeholder.com/40'"
+              alt="Avatar"
+              style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"
+            >
+            <div>
+              <h4 style="margin: 0; font-size: 1rem;">{{ p.autor.nombre }} {{ p.autor.apellido }}</h4>
+              <span style="font-size: 0.8rem; color: #666;">&#64;{{ p.autor.username }}</span>
+            </div>
           </div>
-        </div>
+        }
 
         @if (esAdmin()) {
           @if (!confirmandoEliminar()) {
@@ -87,7 +109,17 @@
           @for (c of comentarios(); track c._id) {
             <div style="background: #f9f9f9; padding: 10px; border-radius: 6px; border: 1px solid #eee; position: relative;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span style="font-weight: bold; font-size: 0.85rem;">{{ c.autor?.nombre }} {{ c.autor?.apellido }}</span>
+                @if (obtenerAutorId(c.autor); as comentarioAutorId) {
+                  <a
+                    [routerLink]="['/profile', comentarioAutorId]"
+                    (click)="$event.stopPropagation()"
+                    style="font-weight: bold; font-size: 0.85rem; color: inherit; text-decoration: none; cursor: pointer;"
+                  >
+                    {{ c.autor?.nombre }} {{ c.autor?.apellido }}
+                  </a>
+                } @else {
+                  <span style="font-weight: bold; font-size: 0.85rem;">{{ c.autor?.nombre }} {{ c.autor?.apellido }}</span>
+                }
                 
                 <div style="display: flex; gap: 8px; align-items: center;">
                   @if (($any(c).modificado)) {

@@ -9,6 +9,12 @@ import { Model, isObjectIdOrHexString, Types } from 'mongoose';
 import { CrearPublicacionDto } from './dto/crear-publicacion.dto';
 import { ActualizarPublicacionDto } from './dto/actualizar-publicacion.dto';
 import { PublicacionMongo, PublicacionDocument } from './publicacion.schema';
+import { LikeLog, LikeLogDocument } from './like-log.schema';
+import { LoginLog, LoginLogDocument } from '../auth/login-log.schema';
+import {
+  VisitaPerfil,
+  VisitaPerfilDocument,
+} from '../usuarios/visita-perfil.schema';
 import { Usuario } from '../auth/usuario.schema';
 import { PortadasService } from './portadas.service';
 
@@ -19,6 +25,12 @@ export class PublicacionesService {
     private readonly modelo: Model<PublicacionDocument>,
     @InjectModel(Usuario.name)
     private readonly usuariosModelo: Model<Usuario>,
+    @InjectModel(LikeLog.name)
+    private readonly likeLogsModelo: Model<LikeLogDocument>,
+    @InjectModel(LoginLog.name)
+    private readonly loginLogsModelo: Model<LoginLogDocument>,
+    @InjectModel(VisitaPerfil.name)
+    private readonly visitasPerfilModelo: Model<VisitaPerfilDocument>,
     private readonly portadas: PortadasService,
   ) {}
 
@@ -176,12 +188,25 @@ export class PublicacionesService {
     const pub = await this.modelo.findOne({ _id: id, activo: true });
     if (!pub) throw new NotFoundException('No existe la publicación');
 
+    const pubObjectId = new Types.ObjectId(id);
     const usrObjectId = new Types.ObjectId(usuarioId);
     const yaDioLike = pub.likes.some((idLike) => idLike.equals(usrObjectId));
 
     const updateQuery = yaDioLike
       ? { $pull: { likes: usrObjectId } }
       : { $addToSet: { likes: usrObjectId } };
+
+    if (yaDioLike) {
+      await this.likeLogsModelo
+        .deleteOne({ publicacionId: pubObjectId, usuarioId: usrObjectId })
+        .exec();
+    } else {
+      await this.likeLogsModelo.create({
+        publicacionId: pubObjectId,
+        usuarioId: usrObjectId,
+        fecha: new Date(),
+      });
+    }
 
     return this.modelo
       .findByIdAndUpdate(id, updateQuery, { new: true })
@@ -410,6 +435,159 @@ export class PublicacionesService {
         { $sort: { totalComentarios: -1, createdAt: -1 } },
       ])
       .exec();
+  }
+
+  // =========================================================================
+  // SPRINT 5: Estadísticas (Logins por Usuario, Visitas a Perfil y Likes/Día)
+  // =========================================================================
+
+  async estadisticasLoginsPorUsuario(desde?: string, hasta?: string) {
+    const rango = this.construirRangoFechas(desde, hasta);
+    const pipeline: any[] = [];
+
+    if (rango) {
+      pipeline.push({ $match: { fecha: rango } });
+    }
+
+    pipeline.push(
+      {
+        $group: {
+          _id: '$usuarioId',
+          totalLogins: { $sum: 1 },
+          ultimoIngreso: { $max: '$fecha' },
+        },
+      },
+      {
+        $lookup: {
+          from: this.usuariosModelo.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'usuario',
+        },
+      },
+      {
+        $unwind: {
+          path: '$usuario',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          usuarioId: '$_id',
+          nombre: { $ifNull: ['$usuario.nombre', ''] },
+          apellido: { $ifNull: ['$usuario.apellido', ''] },
+          username: { $ifNull: ['$usuario.username', 'Sin usuario'] },
+          email: { $ifNull: ['$usuario.email', ''] },
+          totalLogins: 1,
+          ultimoIngreso: 1,
+        },
+      },
+      { $sort: { totalLogins: -1 } },
+    );
+
+    return this.loginLogsModelo.aggregate(pipeline).exec();
+  }
+
+  async estadisticasVisitasPerfil(
+    usuarioId: string,
+    desde?: string,
+    hasta?: string,
+  ) {
+    this.validarId(usuarioId);
+    const rango = this.construirRangoFechas(desde, hasta);
+    const perfilObjectId = new Types.ObjectId(usuarioId);
+
+    const matchEtapa: any = {
+      perfilId: perfilObjectId,
+      visitanteId: { $ne: perfilObjectId },
+    };
+
+    if (rango) {
+      matchEtapa.createdAt = rango;
+    }
+
+    const porVisitante = await this.visitasPerfilModelo
+      .aggregate([
+        { $match: matchEtapa },
+        {
+          $group: {
+            _id: '$visitanteId',
+            totalVisitas: { $sum: 1 },
+            ultimaVisita: { $max: '$createdAt' },
+          },
+        },
+        {
+          $lookup: {
+            from: this.usuariosModelo.collection.name,
+            localField: '_id',
+            foreignField: '_id',
+            as: 'visitante',
+          },
+        },
+        {
+          $unwind: {
+            path: '$visitante',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            visitanteId: '$_id',
+            nombre: { $ifNull: ['$visitante.nombre', ''] },
+            apellido: { $ifNull: ['$visitante.apellido', ''] },
+            username: { $ifNull: ['$visitante.username', 'Visitante'] },
+            totalVisitas: 1,
+            ultimaVisita: 1,
+          },
+        },
+        { $sort: { totalVisitas: -1 } },
+      ])
+      .exec();
+
+    const totalGeneral = porVisitante.reduce(
+      (acc, item) => acc + item.totalVisitas,
+      0,
+    );
+
+    return {
+      totalGeneral,
+      porVisitante,
+    };
+  }
+
+  async estadisticasLikesPorDia(desde?: string, hasta?: string) {
+    const rango = this.construirRangoFechas(desde, hasta);
+    const pipeline: any[] = [];
+
+    if (rango) {
+      pipeline.push({ $match: { fecha: rango } });
+    }
+
+    pipeline.push(
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$fecha',
+            },
+          },
+          totalLikes: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          fecha: '$_id',
+          totalLikes: 1,
+        },
+      },
+      { $sort: { fecha: 1 } },
+    );
+
+    return this.likeLogsModelo.aggregate(pipeline).exec();
   }
 
   // =========================================================================

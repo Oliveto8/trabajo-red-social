@@ -1,13 +1,13 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Post, PostService } from '../../../../core/services/post.service';
 import { apiError } from '../../../../core/services/api-error';
 
 @Component({
   selector: 'app-publicacion',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './publicacion.html',
   styleUrl: './publicacion.css',
 })
@@ -18,11 +18,17 @@ export class PublicacionComponent {
   private postService = inject(PostService);
   private router = inject(Router);
 
+  obtenerAutorId(autor: any): string | null {
+    if (!autor) return null;
+    if (typeof autor === 'string') return autor;
+    return autor._id || autor.id || null;
+  }
+
   verDetalle(postId: string) {
     this.router.navigate(['/publicacion', postId]);
   }
 
-  // NUEVO: Devuelve como máximo los primeros 3 comentarios para la tarjeta del Home
+  // Devuelve como máximo los primeros 3 comentarios para la tarjeta del Home
   get comentariosVisibles() {
     if (!this.post.comentarios) return [];
     return this.post.comentarios.slice(0, 3);
@@ -33,7 +39,7 @@ export class PublicacionComponent {
       next: (postModificado) => {
         this.postActualizado.emit(postModificado);
       },
-      error: (err) => alert(apiError(err))
+      error: (err) => alert(apiError(err)),
     });
   }
 
@@ -50,7 +56,7 @@ export class PublicacionComponent {
         this.postActualizado.emit(postModificado);
         form.reset();
       },
-      error: (err) => alert(apiError(err))
+      error: (err) => alert(apiError(err)),
     });
   }
 }

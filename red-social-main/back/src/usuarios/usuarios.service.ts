@@ -5,23 +5,26 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isObjectIdOrHexString, Model, mongo } from 'mongoose';
+import { isObjectIdOrHexString, Model, mongo, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { Usuario, UsuarioDocument } from '../auth/usuario.schema';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto';
+import {
+  VisitaPerfil,
+  VisitaPerfilDocument,
+} from './visita-perfil.schema';
 
 @Injectable()
 export class UsuariosService {
   constructor(
     @InjectModel(Usuario.name)
     private readonly usuarios: Model<UsuarioDocument>,
+    @InjectModel(VisitaPerfil.name)
+    private readonly visitas: Model<VisitaPerfilDocument>,
   ) {}
 
   async listar() {
-    return this.usuarios
-      .find()
-      .sort({ createdAt: -1 })
-      .exec();
+    return this.usuarios.find().sort({ createdAt: -1 }).exec();
   }
 
   async crear(datos: CrearUsuarioDto) {
@@ -41,7 +44,8 @@ export class UsuariosService {
         activo: true,
       });
 
-      const { passwordHash: _passwordHash, ...usuarioPlano } = creado.toObject();
+      const { passwordHash: _passwordHash, ...usuarioPlano } =
+        creado.toObject();
       return usuarioPlano;
     } catch (error) {
       if (error instanceof mongo.MongoServerError && error.code === 11000) {
@@ -53,6 +57,44 @@ export class UsuariosService {
       }
       throw error;
     }
+  }
+
+  async obtenerPerfilPorId(id: string) {
+    this.validarId(id);
+
+    const usuario = await this.usuarios
+      .findOne({ _id: id, activo: { $ne: false } })
+      .select('-passwordHash')
+      .exec();
+
+    if (!usuario) {
+      throw new NotFoundException('El usuario no existe');
+    }
+
+    return usuario;
+  }
+
+  async registrarVisita(perfilId: string, visitanteId: string): Promise<void> {
+    this.validarId(perfilId);
+    this.validarId(visitanteId);
+
+    // Solo se contabilizan visitas de otros usuarios (no de uno mismo)
+    if (perfilId === visitanteId) {
+      return;
+    }
+
+    const existePerfil = await this.usuarios
+      .exists({ _id: perfilId, activo: { $ne: false } })
+      .exec();
+
+    if (!existePerfil) {
+      throw new NotFoundException('El usuario no existe');
+    }
+
+    await this.visitas.create({
+      perfilId: new Types.ObjectId(perfilId),
+      visitanteId: new Types.ObjectId(visitanteId),
+    });
   }
 
   async deshabilitar(id: string) {

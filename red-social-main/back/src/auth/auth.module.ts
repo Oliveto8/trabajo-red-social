@@ -7,11 +7,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Usuario, UsuarioSchema } from './usuario.schema';
+import { LoginLog, LoginLogSchema } from './login-log.schema';
 
 @Module({
   imports: [
     PassportModule,
-    MongooseModule.forFeature([{ name: Usuario.name, schema: UsuarioSchema }]),
+    MongooseModule.forFeature([
+      { name: Usuario.name, schema: UsuarioSchema },
+      { name: LoginLog.name, schema: LoginLogSchema },
+    ]),
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: process.env.JWT_SECRET,

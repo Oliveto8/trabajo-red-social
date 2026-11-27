@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PostService, Post, Comentario } from '../../../../core/services/post.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -8,7 +8,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-detalle-publicacion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './detalle-publicacion.html',
   styleUrl: './detalle-publicacion.css',
 })
@@ -46,6 +46,12 @@ export class DetallePublicacionComponent implements OnInit {
       this.cargarPublicacion(postId);
       this.cargarComentarios(postId);
     }
+  }
+
+  obtenerAutorId(autor: any): string | null {
+    if (!autor) return null;
+    if (typeof autor === 'string') return autor;
+    return autor._id || autor.id || null;
   }
 
   esAdmin(): boolean {
@@ -176,9 +182,7 @@ export class DetallePublicacionComponent implements OnInit {
     if (!user) return false;
 
     const userId = (user as any).id || (user as any)._id;
-    const autorId = comentario.autor?._id
-      ? comentario.autor._id.toString()
-      : comentario.autor?.toString();
+    const autorId = this.obtenerAutorId(comentario.autor);
 
     return autorId === userId;
   }

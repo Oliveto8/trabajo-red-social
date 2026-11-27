@@ -6,8 +6,9 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
-import { Model, mongo } from 'mongoose';
+import { Model, mongo, Types } from 'mongoose';
 import { Usuario } from './usuario.schema';
+import { LoginLog, LoginLogDocument } from './login-log.schema';
 import { CredencialesDto } from './credenciales.dto';
 import { RegistroDto } from './registro.dto';
 
@@ -17,6 +18,8 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     @InjectModel(Usuario.name) private readonly usuarios: Model<Usuario>,
+    @InjectModel(LoginLog.name)
+    private readonly loginLogs: Model<LoginLogDocument>,
     private readonly jwt: JwtService,
   ) {}
 
@@ -72,6 +75,11 @@ export class AuthService {
         'Tu cuenta está deshabilitada y no está autorizada para ingresar',
       );
     }
+
+    await this.loginLogs.create({
+      usuarioId: new Types.ObjectId(usuario._id),
+      fecha: new Date(),
+    });
 
     return this.token(
       usuario.id as string,

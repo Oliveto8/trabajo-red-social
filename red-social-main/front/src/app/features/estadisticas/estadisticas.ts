@@ -1,99 +1,181 @@
-import { Component, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import {
-  EstadisticasService,
-  PublicacionPorUsuarioStat,
   ComentariosPorPublicacionStat,
+  EstadisticasService,
+  LikesPorDiaStat,
+  LoginPorUsuarioStat,
+  PublicacionesPorUsuarioStat,
+  VisitasPerfilStatResponse,
 } from '../../core/services/estadisticas.service';
+import { AuthService } from '../../core/services/auth.service';
+import { apiError } from '../../core/services/api-error';
+
+interface SegmentoDona {
+  label: string;
+  value: number;
+  color: string;
+  dashArray: string;
+  dashOffset: number;
+}
 
 @Component({
-  selector: 'app-dashboard-estadisticas',
+  selector: 'app-estadisticas',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './estadisticas.html',
   styleUrl: './estadisticas.css',
 })
 export class EstadisticasComponent implements OnInit {
-  private readonly estadisticasService = inject(EstadisticasService);
+  private estadisticasService = inject(EstadisticasService);
+  private authService = inject(AuthService);
+
+  cargando = signal(false);
+  error = signal<string | null>(null);
 
   desde = '';
   hasta = '';
 
-  readonly cargando = signal(false);
-  readonly error = signal<string | null>(null);
-  readonly porUsuario = signal<PublicacionPorUsuarioStat[]>([]);
-  readonly totalComentarios = signal<number>(0);
-  readonly porPublicacion = signal<ComentariosPorPublicacionStat[]>([]);
+  // Sprint 4
+  porUsuario = signal<PublicacionesPorUsuarioStat[]>([]);
+  totalComentarios = signal<number>(0);
+  porPublicacion = signal<ComentariosPorPublicacionStat[]>([]);
 
-  private readonly maxPublicacionesUsuario = computed(() =>
-    Math.max(0, ...this.porUsuario().map((x) => x.totalPublicaciones)),
+  // Sprint 5
+  loginsPorUsuario = signal<LoginPorUsuarioStat[]>([]);
+  visitasPerfil = signal<VisitasPerfilStatResponse>({
+    totalGeneral: 0,
+    porVisitante: [],
+  });
+  likesPorDia = signal<LikesPorDiaStat[]>([]);
+
+  private readonly paleta = [
+    '#2563eb',
+    '#10b981',
+    '#f59e0b',
+    '#8b5cf6',
+    '#ef4444',
+    '#06b6d4',
+    '#ec4899',
+  ];
+
+  // --- Helpers Sprint 4 ---
+  porcentajeUsuario(total: number): number {
+    const max = Math.max(1, ...this.porUsuario().map((u) => u.totalPublicaciones));
+    return Math.round((total / max) * 100);
+  }
+
+  porcentajePublicacion(total: number): number {
+    const max = Math.max(1, ...this.porPublicacion().map((p) => p.totalComentarios));
+    return Math.round((total / max) * 100);
+  }
+
+  // --- 1. Barras: Logins por usuario ---
+  maxLogins = computed(() => {
+    const items = this.loginsPorUsuario();
+    return Math.max(1, ...items.map((i) => i.totalLogins));
+  });
+
+  // --- 2. Dona: Visitas a mi perfil (excluyendo auto-visitas) ---
+  readonly radioDona = 58;
+  readonly circunferenciaDona = 2 * Math.PI * 58;
+
+  segmentosVisitas = computed<SegmentoDona[]>(() => {
+    const visitantes = this.visitasPerfil().porVisitante || [];
+    const total = visitantes.reduce((acc, v) => acc + v.totalVisitas, 0);
+    if (total === 0) return [];
+
+    let acumulado = 0;
+    return visitantes.map((v, idx) => {
+      const fraccion = v.totalVisitas / total;
+      const longitud = fraccion * this.circunferenciaDona;
+      const seg: SegmentoDona = {
+        label: `@${v.username}`,
+        value: v.totalVisitas,
+        color: this.paleta[idx % this.paleta.length],
+        dashArray: `${longitud} ${this.circunferenciaDona}`,
+        dashOffset: -acumulado,
+      };
+      acumulado += longitud;
+      return seg;
+    });
+  });
+
+  // --- 3. Líneas: Likes otorgados por día ---
+  puntosLineaLikes = computed(() => {
+    const datos = this.likesPorDia();
+    if (!datos.length) return [];
+
+    const width = 460;
+    const height = 180;
+    const padX = 36;
+    const padY = 24;
+    const maxVal = Math.max(1, ...datos.map((d) => d.totalLikes));
+
+    return datos.map((d, idx) => {
+      const x =
+        datos.length === 1
+          ? width / 2
+          : padX + (idx / (datos.length - 1)) * (width - padX * 2);
+      const y = height - padY - (d.totalLikes / maxVal) * (height - padY * 2);
+      return {
+        x: Number(x.toFixed(1)),
+        y: Number(y.toFixed(1)),
+        fecha: d.fecha,
+        totalLikes: d.totalLikes,
+      };
+    });
+  });
+
+  polylineLikes = computed(() =>
+    this.puntosLineaLikes()
+      .map((p) => `${p.x},${p.y}`)
+      .join(' '),
   );
 
-  private readonly maxComentariosPublicacion = computed(() =>
-    Math.max(0, ...this.porPublicacion().map((x) => x.totalComentarios)),
-  );
-
-  ngOnInit(): void {
+  ngOnInit() {
     this.cargarEstadisticas();
   }
 
-  cargarEstadisticas(): void {
+  cargarEstadisticas() {
+    this.cargando.set(true);
     this.error.set(null);
 
-    if (this.desde && this.hasta && this.desde > this.hasta) {
-      this.error.set('La fecha "Desde" no puede ser mayor que "Hasta".');
-      return;
-    }
-
-    this.cargando.set(true);
+    const user = this.authService.currentUser() as any;
+    const usuarioId = user?.id || user?._id || user?.sub;
+    const desde = this.desde || undefined;
+    const hasta = this.hasta || undefined;
 
     forkJoin({
-      usuarios: this.estadisticasService.obtenerPublicacionesPorUsuario(
-        this.desde || undefined,
-        this.hasta || undefined,
-      ),
-      comentarios: this.estadisticasService.obtenerTotalComentarios(
-        this.desde || undefined,
-        this.hasta || undefined,
-      ),
-      publicaciones: this.estadisticasService.obtenerComentariosPorPublicacion(
-        this.desde || undefined,
-        this.hasta || undefined,
-      ),
+      pubsPorUsuario: this.estadisticasService.obtenerPublicacionesPorUsuario(desde, hasta),
+      totalComs: this.estadisticasService.obtenerTotalComentarios(desde, hasta),
+      comsPorPub: this.estadisticasService.obtenerComentariosPorPublicacion(desde, hasta),
+      logins: this.estadisticasService.obtenerLoginsPorUsuario(desde, hasta),
+      visitas: this.estadisticasService.obtenerVisitasPerfil(usuarioId, desde, hasta),
+      likes: this.estadisticasService.obtenerLikesPorDia(desde, hasta),
     }).subscribe({
-      next: ({ usuarios, comentarios, publicaciones }) => {
-        this.porUsuario.set(usuarios);
-        this.totalComentarios.set(comentarios.totalComentarios);
-        this.porPublicacion.set(publicaciones);
+      next: ({ pubsPorUsuario, totalComs, comsPorPub, logins, visitas, likes }) => {
+        this.porUsuario.set(pubsPorUsuario || []);
+        this.totalComentarios.set(totalComs?.totalComentarios ?? 0);
+        this.porPublicacion.set(comsPorPub || []);
+
+        this.loginsPorUsuario.set(logins || []);
+        this.visitasPerfil.set(visitas || { totalGeneral: 0, porVisitante: [] });
+        this.likesPorDia.set(likes || []);
         this.cargando.set(false);
       },
       error: (err) => {
-        const msg =
-          err?.error?.message ||
-          (err?.status === 403
-            ? 'No tenés permisos de administrador para ver estas estadísticas.'
-            : 'No se pudieron cargar las estadísticas.');
-        this.error.set(Array.isArray(msg) ? msg.join(', ') : msg);
+        this.error.set(apiError(err));
         this.cargando.set(false);
       },
     });
   }
 
-  limpiarFiltros(): void {
+  limpiarFiltros() {
     this.desde = '';
     this.hasta = '';
     this.cargarEstadisticas();
-  }
-
-  porcentajeUsuario(cantidad: number): number {
-    const max = this.maxPublicacionesUsuario();
-    return max > 0 ? Math.round((cantidad / max) * 100) : 0;
-  }
-
-  porcentajePublicacion(cantidad: number): number {
-    const max = this.maxComentariosPublicacion();
-    return max > 0 ? Math.round((cantidad / max) * 100) : 0;
   }
 }
